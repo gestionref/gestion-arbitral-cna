@@ -1,0 +1,312 @@
+<!DOCTYPE html><html lang="es"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/><title>Gestión Arbitral CNA</title><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><style>
+:root{--bg:#0f172a;--panel:#111c33;--card:#16233f;--ink:#e8eef7;--mut:#8ea3c4;--line:#22345a;--acc:#e11d48;--acc2:#2563eb;--gold:#eab308;--ok:#16a34a}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);color:var(--ink);font-size:14px}
+button,select,textarea{font-family:inherit}.hide{display:none!important}
+#login{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:radial-gradient(1200px 600px at 70% -10%,#1e293b,#0b1220)}
+.loginbox{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:38px 34px;width:370px;box-shadow:0 30px 80px rgba(0,0,0,.5)}
+.brand{display:flex;align-items:center;gap:12px;margin-bottom:6px}
+.logo{width:44px;height:44px;border-radius:12px;background:linear-gradient(135deg,var(--acc),#7f1d1d);display:flex;align-items:center;justify-content:center;font-weight:800;color:#fff;font-size:18px}
+.brand h1{font-size:16px}.sub{color:var(--mut);font-size:12px;margin:4px 0 22px}
+label{display:block;font-size:12px;color:var(--mut);margin:14px 0 6px}
+input,textarea{width:100%;padding:11px 12px;background:#0c1526;border:1px solid var(--line);border-radius:9px;color:var(--ink);font-size:14px}
+input:focus,textarea:focus{outline:none;border-color:var(--acc2)}
+.btn{width:100%;margin-top:22px;padding:12px;background:var(--acc);border:0;border-radius:9px;color:#fff;font-weight:700;font-size:14px;cursor:pointer}
+.hint{margin-top:16px;font-size:11px;color:var(--mut);text-align:center;line-height:1.6}
+#app{display:flex;min-height:100vh}
+.side{width:238px;background:var(--panel);border-right:1px solid var(--line);padding:18px 14px;position:sticky;top:0;height:100vh;display:flex;flex-direction:column;overflow-y:auto}
+.side .brand{margin-bottom:6px}.side .brand h1{font-size:14px}.season{font-size:11px;color:var(--mut);margin:0 0 16px 2px}
+.nav a{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:9px;color:var(--mut);text-decoration:none;font-weight:600;margin-bottom:2px;font-size:13px;cursor:pointer}
+.nav a:hover{background:var(--card);color:var(--ink)}.nav a.active{background:var(--acc);color:#fff}.nav .ic{width:16px;text-align:center}
+.side .foot{margin-top:auto;font-size:11px;color:var(--mut);border-top:1px solid var(--line);padding-top:14px}.side .foot b{color:var(--ink)}
+.main{flex:1;padding:24px 30px;max-width:1240px}
+.top{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:12px}.top h2{font-size:22px}
+.evsel select{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:9px 12px;font-size:13px;color:var(--ink);max-width:360px}
+.grid{display:grid;gap:14px}.kpis{grid-template-columns:repeat(4,1fr)}.k3{grid-template-columns:repeat(3,1fr)}
+.kpi{background:var(--card);border:1px solid var(--line);border-radius:13px;padding:16px}.kpi .n{font-size:25px;font-weight:800}.kpi .l{font-size:11px;color:var(--mut);margin-top:3px;text-transform:uppercase;letter-spacing:.4px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:13px;padding:18px;margin-top:16px}.card h3{font-size:14px;margin-bottom:12px}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{text-align:left;color:var(--mut);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.4px;padding:8px 10px;border-bottom:1px solid var(--line)}
+td{padding:9px 10px;border-bottom:1px solid #1a2946}tr:last-child td{border-bottom:0}
+tr.clk:hover{background:#1a2a49;cursor:pointer}
+.search{width:300px;max-width:100%;margin-bottom:14px}
+.pill{display:inline-block;padding:2px 9px;border-radius:20px;font-size:11px;font-weight:700;margin-right:4px}
+.p-arb{background:#1e3a8a33;color:#93c5fd;border:1px solid #1e3a8a}.p-del{background:#7c2d1233;color:#fdba74;border:1px solid #9a3412}
+.p-obs{background:#4c1d9533;color:#c4b5fd;border:1px solid #6d28d9}.p-cat{background:#14532d33;color:#86efac;border:1px solid #166534}
+.p-ev{background:#0e293f;color:#7dd3fc;border:1px solid #155e75}.p-warn{background:#7c2d1233;color:#fca5a5;border:1px solid #b91c1c}.p-ok{background:#14532d33;color:#86efac;border:1px solid #166534}
+.rankbadge{display:inline-flex;width:26px;height:26px;border-radius:50%;align-items:center;justify-content:center;font-weight:800;font-size:12px;background:#1f2d4d}.rankbadge.top{background:var(--gold);color:#3b2f00}
+.back{background:var(--card);border:1px solid var(--line);color:var(--mut);padding:7px 14px;border-radius:9px;font-size:12px;font-weight:600;margin-bottom:16px;cursor:pointer}.back:hover{color:var(--ink)}
+.dhead{display:flex;align-items:center;gap:16px;margin-bottom:6px}
+.avatar{width:56px;height:56px;border-radius:14px;background:linear-gradient(135deg,#334971,#1e293b);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:20px;color:#fff}
+.dhead h2{font-size:21px}.dmeta{color:var(--mut);font-size:13px;margin-top:3px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.kv{display:grid;grid-template-columns:140px 1fr;gap:6px 12px;font-size:13px}.kv .k{color:var(--mut)}
+.bar{display:flex;align-items:center;gap:10px;margin:7px 0}.bar .lb{width:150px;font-size:12px;color:var(--mut)}
+.bar .track{flex:1;height:9px;background:#0c1526;border-radius:6px;overflow:hidden}.bar .fill{height:100%;border-radius:6px;background:linear-gradient(90deg,var(--acc2),#60a5fa)}.bar .vv{width:40px;text-align:right;font-weight:700;font-size:12px}
+.scorebig{font-size:34px;font-weight:800}.muted{color:var(--mut)}.tag{font-size:11px;color:var(--mut)}
+.impzone{border:2px dashed var(--line);border-radius:14px;padding:26px;text-align:center;color:var(--mut)}.impzone b{color:var(--ink)}
+.cathead{background:#0e1a30;border-left:3px solid var(--acc2);padding:7px 12px;margin:14px 0 4px;font-weight:700;font-size:13px;color:#cfe0ff;border-radius:0 8px 8px 0}
+textarea{min-height:80px;resize:vertical;margin-top:8px}
+details{border:1px solid var(--line);border-radius:10px;margin:8px 0;overflow:hidden}
+details summary{cursor:pointer;padding:10px 14px;background:#0e1a30;font-weight:600;font-size:13px;list-style:none;display:flex;justify-content:space-between;align-items:center}
+details summary::-webkit-details-marker{display:none}
+details summary::after{content:'▾';color:var(--mut)}details[open] summary::after{content:'▴'}
+details .inner{padding:6px 14px 12px}
+@media(max-width:900px){.kpis,.k3{grid-template-columns:repeat(2,1fr)}.two{grid-template-columns:1fr}.side{display:none}}
+</style></head><body><noscript><div style="position:fixed;inset:0;background:#0b1220;color:#e8eef7;display:flex;align-items:center;justify-content:center;padding:30px;font-family:Arial">Esta aplicación necesita JavaScript.</div></noscript><div id="login"><div class="loginbox"><div class="brand"><div class="logo">CNA</div><h1>Gestión Arbitral CNA</h1></div><div class="sub">Comisión Nacional de Árbitros · Temporada 2026</div><label>Email</label><input id="u" type="email" placeholder="tu@correo.com" autocomplete="username"/><label>Contraseña</label><input id="p" type="password" placeholder="••••••••" autocomplete="current-password"/><button class="btn" id="loginbtn" onclick="doLogin()">Ingresar</button><div id="loginerr" style="color:#fca5a5;font-size:12px;margin-top:12px;text-align:center;min-height:16px"></div><div class="hint">Acceso para staff de la CNA</div></div></div><div id="app" class="hide"><aside class="side"><div class="brand"><div class="logo">CNA</div><h1>Gestión Arbitral</h1></div><div class="season">Temporada 2026 · 7 eventos</div><nav class="nav" id="nav"><a data-v="dash" class="active"><span class="ic">▦</span> Panel</a>
+<a data-v="arb"><span class="ic">▤</span> Árbitros</a>
+<a data-v="par"><span class="ic">⚌</span> Parejas</a>
+<a data-v="sedes"><span class="ic">◱</span> Sedes / canchas</a>
+<a data-v="obs"><span class="ic">◎</span> Observadores</a>
+<a data-v="del"><span class="ic">✦</span> Delegados</a>
+<a data-v="rank"><span class="ic">★</span> Ranking activo</a>
+<a data-v="r25"><span class="ic">≣</span> Ranking 2025</a>
+<a data-v="bd"><span class="ic">▧</span> Base de datos</a></nav><div class="foot">CNA · en vivo<br><a onclick="logout();return false" style="color:var(--acc2);cursor:pointer">Salir</a></div></aside><main class="main" id="main"></main></div><script>
+let DATA=null;
+const SB=supabase.createClient('https://ikcvwpgrfxsptmmpburw.supabase.co','sb_publishable_wGoUBI3v5faiVIjuxN-oRA_Pl0JKAxW');
+let curEv='ALL',curView='dash',curArg=null,lastKind='arb';
+const notes={};
+const $=(s,e=document)=>e.querySelector(s);
+const initials=n=>String(n).split(/\s+/).filter(Boolean).slice(0,2).map(x=>x[0]).join('').toUpperCase();
+const norm=s=>(s||'').normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^A-Za-z0-9 ]/g,' ').toUpperCase();
+const shortEv=n=>String(n).split(' - ')[0]||n;
+const personById=pid=>DATA.personas.find(p=>p.pid===pid);
+const parejaBy=(evid,code)=>DATA.parejas.find(p=>p.evid===evid&&p.code===code);
+function tokset(s){return new Set(norm(s).split(/\s+/).filter(x=>x.length>2));}
+function tokMatch(a,b){const A=tokset(a),B=tokset(b);let sh=0;A.forEach(x=>{if(B.has(x))sh++});if(sh>=2)return true;const mx=[...A].sort((x,y)=>y.length-x.length)[0];return mx&&B.has(mx);}
+function participatesIn(per,evid){return per.participaciones.some(x=>x.evid===evid);}
+function evFilterPerson(per){return curEv==='ALL'||participatesIn(per,curEv);}
+
+async function doLogin(){
+  const em=$('#u').value.trim(), pw=$('#p').value;
+  const btn=$('#loginbtn'); const err=$('#loginerr');
+  err.textContent=''; btn.disabled=true; btn.textContent='Ingresando…';
+  try{
+    const {error}=await SB.auth.signInWithPassword({email:em,password:pw});
+    if(error){err.textContent='Email o contraseña incorrectos.'; btn.disabled=false; btn.textContent='Ingresar'; return;}
+    await loadData();
+    $('#login').classList.add('hide'); $('#app').classList.remove('hide'); render('dash');
+  }catch(e){ err.textContent='No se pudo conectar. Revisá tu conexión.'; }
+  btn.disabled=false; btn.textContent='Ingresar';
+}
+async function loadData(){
+  const {data,error}=await SB.from('app_data').select('data').eq('id',1).single();
+  if(error||!data){ $('#loginerr').textContent='No se pudieron cargar los datos ('+(error?error.message:'sin datos')+').'; throw new Error('load'); }
+  DATA=data.data;
+}
+document.addEventListener('keydown',e=>{if(e.key==='Enter'&&!$('#login').classList.contains('hide'))doLogin();});
+async function logout(){ await SB.auth.signOut(); DATA=null; $('#app').classList.add('hide'); $('#login').classList.remove('hide'); $('#u').value=''; $('#p').value=''; }
+// sesión persistente: si ya está logueado, entrar directo
+window.addEventListener('load',async()=>{ const {data}=await SB.auth.getSession(); if(data&&data.session){ try{ await loadData(); $('#login').classList.add('hide'); $('#app').classList.remove('hide'); render('dash'); }catch(e){} } });
+document.addEventListener('DOMContentLoaded',()=>{const n=$('#nav');if(n)n.addEventListener('click',e=>{const a=e.target.closest('a');if(a)render(a.dataset.v);});});
+function setActive(v){document.querySelectorAll('#nav a').forEach(a=>a.classList.toggle('active',a.dataset.v===v));}
+function setEv(v){curEv=v;render(curView,curArg);}
+
+function render(v,arg){
+  curView=v;curArg=arg;
+  if(['arb','obs','del'].includes(v)&&!arg)lastKind=v;
+  let nvk=v; if(v==='per')nvk=lastKind; else if(v==='evd')nvk='dash'; else if(v==='pare')nvk='par';
+  setActive(nvk);
+  const m=$('#main');
+  if(v==='dash')m.innerHTML=(curEv==='ALL')?viewDash():viewEventDetail(curEv);
+  else if(v==='evd')m.innerHTML=viewEventDetail(arg);
+  else if(v==='par')m.innerHTML=(arg!=null)?viewParConsol(arg):viewList('par');
+  else if(v==='pare')m.innerHTML=viewParEvento(arg);
+  else if(v==='sedes')m.innerHTML=arg?viewVenue(arg):viewList('sedes');
+  else if(['arb','obs','del'].includes(v))m.innerHTML=arg?viewPerson(arg):viewList(v);
+  else if(v==='per')m.innerHTML=viewPerson(arg);
+  else if(v==='rank')m.innerHTML=viewRank();
+  else if(v==='r25')m.innerHTML=viewRank2025();
+  else if(v==='bd')m.innerHTML=viewBD();
+  else if(v==='imp')m.innerHTML=viewImport();
+  window.scrollTo(0,0);
+  const sb=$('#searchbox');if(sb)sb.addEventListener('input',()=>filterRows(sb.value));
+}
+function evSelector(){const o=['<option value="ALL">Todos los eventos</option>'].concat(DATA.events.map(e=>`<option value="${e.id}" ${e.id===curEv?'selected':''}>${e.nombre}</option>`)).join('');return `<div class="evsel"><select onchange="setEv(this.value)">${o}</select></div>`;}
+function pageHdr(t){return `<div class="top"><h2>${t}</h2>${evSelector()}</div>`;}
+function kpi(n,l){return `<div class="kpi"><div class="n">${n}</div><div class="l">${l}</div></div>`;}
+function rolePills(rs){return rs.map(r=>`<span class="pill ${r==='Árbitro'?'p-arb':r==='Delegado'?'p-del':'p-obs'}">${r}</span>`).join('');}
+
+function viewDash(){
+  const evRows=DATA.events.map(e=>`<tr class="clk" onclick="render('evd','${e.id}')"><td><b>${e.nombre}</b></td><td>${e.personas}</td><td>${e.parejas}</td><td>${e.partidos}</td><td>→</td></tr>`).join('');
+  const rec=[...DATA.personas].sort((a,b)=>b.career.eventos-a.career.eventos).slice(0,10).map(p=>`<tr class="clk" onclick="openPerson('${p.pid}')"><td><b>${p.nombre}</b></td><td>${rolePills(p.roles)}</td><td>${p.career.eventos}</td></tr>`).join('');
+  return pageHdr('Panel de temporada')+`
+   <div class="grid kpis">${kpi(DATA.events.length,'Eventos')}${kpi(DATA.personas.length,'Personas')}${kpi(DATA.parejas_consolidadas.length,'Parejas')}${kpi(DATA.partidos.length,'Partidos')}</div>
+   <div class="two">
+     <div class="card"><h3>Eventos de la temporada <span class="tag">— clic para el detalle</span></h3><table><thead><tr><th>Evento</th><th>Pers.</th><th>Parejas</th><th>Part.</th><th></th></tr></thead><tbody>${evRows}</tbody></table></div>
+     <div class="card"><h3>Mayor presencia</h3><table><thead><tr><th>Persona</th><th>Roles</th><th>Ev.</th></tr></thead><tbody>${rec}</tbody></table></div>
+   </div>`;
+}
+function viewEventDetail(evid){
+  const e=DATA.events.find(x=>x.id===evid);
+  const pj=DATA.parejas.filter(p=>p.evid===evid).slice().sort((a,b)=>(a.ranking||99)-(b.ranking||99));
+  const pjRows=pj.map(p=>`<tr class="clk" onclick="render('pare','${p.evid}|${p.code}')"><td><span class="rankbadge ${p.ranking===1?'top':''}">${p.ranking||'-'}</span></td><td><b>${p.code}</b></td><td>${p.names.join(' / ')}</td><td>${p.pts}</td><td>${p.n_desig}</td><td>${p.n_eval}</td></tr>`).join('');
+  const ven=DATA.venues.filter(v=>v.canchas.some(c=>c.evid===evid));
+  const venRows=ven.map(v=>{const c=v.canchas.filter(x=>x.evid===evid);return `<tr class="clk" onclick="render('sedes','${v.id}')"><td><b>${v.id}</b></td><td>${v.sede}</td><td>${c.reduce((a,x)=>a+x.n,0)}</td></tr>`;}).join('');
+  const arb=DATA.personas.filter(p=>p.participaciones.some(x=>x.evid===evid&&x.rol==='Árbitro'));
+  return `<button class="back" onclick="setEv('ALL')">← Volver al panel</button>`+pageHdr(e.nombre)+`
+   <div class="grid kpis">${kpi(e.personas,'Personas')}${kpi(e.parejas,'Parejas')}${kpi(e.partidos,'Partidos')}${kpi(ven.length,'Sedes')}</div>
+   <div class="card"><h3>Ranking del torneo — parejas</h3><table><thead><tr><th>Puesto</th><th>Cód.</th><th>Integrantes</th><th>Prom.</th><th>Dirigidos</th><th>Evaluados</th></tr></thead><tbody>${pjRows}</tbody></table></div>
+   <div class="two">
+     <div class="card"><h3>Sedes utilizadas</h3><table><thead><tr><th>ID</th><th>Sede</th><th>Part.</th></tr></thead><tbody>${venRows}</tbody></table></div>
+     <div class="card"><h3>Árbitros del evento (${arb.length})</h3><table><thead><tr><th>Nombre</th><th>Categoría</th><th>Dirigidos</th></tr></thead><tbody>${arb.map(p=>{const x=p.participaciones.find(y=>y.evid===evid);return `<tr class="clk" onclick="openPerson('${p.pid}')"><td>${p.nombre}</td><td>${x.categoria_norm||p.categoria||'—'}</td><td>${x.n_dir}</td></tr>`;}).join('')}</tbody></table></div>
+   </div>`;
+}
+function openPerson(pid){const per=personById(pid);lastKind=per.roles.includes('Árbitro')?'arb':per.roles.includes('Observador')?'obs':'del';render('per',pid);}
+
+function viewList(kind){
+  let title,rows,cols;
+  if(kind==='par'){title='Parejas arbitrales <span class="tag" style="font-size:12px">— consolidadas por integrantes</span>';
+    let pc=DATA.parejas_consolidadas.filter(c=>curEv==='ALL'||c.apariciones.some(a=>a.evid===curEv)).slice().sort((a,b)=>(typeof b.prom==='number'?b.prom:-1)-(typeof a.prom==='number'?a.prom:-1));
+    rows=pc.map(c=>`<tr class="clk" data-s="${norm(c.names.join(' '))}" onclick="render('par','${DATA.parejas_consolidadas.indexOf(c)}')"><td><b>${c.names.join(' / ')}</b></td><td>${c.n_eventos}</td><td>${c.n_desig}</td><td>${c.n_eval}</td><td>${c.prom||'—'}</td></tr>`).join('');
+    cols='<th>Integrantes</th><th>Eventos</th><th>Dirigidos</th><th>Evaluados</th><th>Prom.</th>';}
+  else if(kind==='sedes'){title='Sedes / canchas';
+    rows=DATA.venues.map(v=>`<tr class="clk" data-s="${norm(v.id+' '+v.sede+' '+v.eventos.join(' '))}" onclick="render('sedes','${v.id}')"><td><b>${v.id}</b></td><td>${v.sede}</td><td>${v.n_eventos}</td><td>${v.n_partidos}</td><td>${notes[v.id]?'📝':''}</td></tr>`).join('');
+    cols='<th>ID sede</th><th>Sede / dirección</th><th>Eventos</th><th>Partidos</th><th></th>';}
+  else{const roleName=kind==='arb'?'Árbitro':kind==='obs'?'Observador':'Delegado';
+    title=kind==='arb'?'Árbitros':kind==='obs'?'Observadores':'Delegados técnicos';
+    let ppl=DATA.personas.filter(p=>p.roles.includes(roleName)&&evFilterPerson(p)).sort((a,b)=>norm(a.nombre).localeCompare(norm(b.nombre)));
+    if(kind==='arb'){cols='<th>Nombre</th><th>Afiliada</th><th>Categoría</th><th>Ev.</th><th>Dirigidos</th><th>Prom.</th><th>Shuttle</th>';
+      rows=ppl.map(p=>`<tr class="clk" data-s="${norm(p.nombre+' '+p.afiliada+' '+p.categoria)}" onclick="render('arb','${p.pid}')"><td><b>${p.nombre}</b></td><td>${p.afiliada||'—'}</td><td>${p.categoria?`<span class="pill p-cat">${p.categoria}</span>`:'—'}</td><td>${p.career.eventos}</td><td>${p.career.n_dir}</td><td>${p.career.prom||'—'}</td><td>${p.fisico.shuttle?p.fisico.shuttle.val:'—'}</td></tr>`).join('');}
+    else{const fld=kind==='obs'?'n_obs':'n_del';const lbl=kind==='obs'?'Observados':'Como delegado';
+      cols=`<th>Nombre</th><th>Afiliada</th><th>Ev.</th><th>${lbl}</th><th>Otros roles</th>`;
+      rows=ppl.map(p=>`<tr class="clk" data-s="${norm(p.nombre+' '+p.afiliada)}" onclick="render('${kind}','${p.pid}')"><td><b>${p.nombre}</b></td><td>${p.afiliada||'—'}</td><td>${p.career.eventos}</td><td>${p.career[fld]}</td><td>${rolePills(p.roles.filter(r=>r!==roleName))||'—'}</td></tr>`).join('');}
+  }
+  return pageHdr(title)+`<input id="searchbox" class="search" placeholder="Buscar…"/><div class="card"><table><thead><tr>${cols}</tr></thead><tbody id="rows">${rows}</tbody></table></div>`;
+}
+function filterRows(q){q=norm(q);document.querySelectorAll('#rows tr').forEach(tr=>{tr.style.display=(!q||(tr.dataset.s||'').includes(q))?'':'none';});}
+
+function backList(k){return `<button class="back" onclick="render('${k}')">← Volver</button>`;}
+function kv(o){return '<div class="kv">'+Object.entries(o).map(([k,v])=>`<div class="k">${k}</div><div>${(v===''||v==null)?'—':v}</div>`).join('')+'</div>';}
+function dhead(name,sub){return `<div class="dhead"><div class="avatar">${initials(name)}</div><div><h2>${name}</h2><div class="dmeta">${sub}</div></div></div>`;}
+function rubrics(f){return DATA.fieldnames.map((n,i)=>{const v=f[i];if(typeof v!=='number')return '';const pct=Math.max(0,Math.min(100,(v/3)*100));return `<div class="bar"><div class="lb">${n}</div><div class="track"><div class="fill" style="width:${pct}%"></div></div><div class="vv">${v}</div></div>`;}).join('');}
+function fisicoStr(o){return o?`${o.val} <span class="tag">(${shortEv(o.evname)})</span>`:'—';}
+
+function grpBy(arr,keyf){const m={};arr.forEach(x=>{const k=keyf(x);(m[k]=m[k]||[]).push(x);});return m;}
+function observationsOf(per){const out=[];DATA.parejas.forEach(pj=>{(pj.partidos||[]).forEach(m=>{if(m.evaluado&&m.observador&&tokMatch(m.observador,per.nombre))out.push({evname:pj.evname,code:pj.code,names:pj.names.join(' / '),partido:m.local+' vs '+m.visitante,resultado:m.resultado,puntos:m.puntos,dificultad:m.dificultad});});});return out;}
+function delegationsOf(per){return DATA.partidos.filter(m=>m.delegado&&tokMatch(m.delegado,per.nombre)).map(m=>({evname:m.evname,partido:m.local+' vs '+m.visitante,pareja:m.pareja_code||m.pareja,cancha:m.cancha,fecha:m.fecha}));}
+
+function viewPerson(pid){
+  const per=personById(pid);const isArb=per.roles.includes('Árbitro');
+  const hist=per.participaciones.map(x=>{const pj=x.pareja_code?parejaBy(x.evid,x.pareja_code):null;return `<tr><td><b>${x.evname}</b></td><td>${x.rol}</td><td>${pj?pj.code+' · '+pj.names.join(' / '):'—'}</td><td>${pj&&pj.ranking?'#'+pj.ranking:'—'}</td><td>${pj&&typeof pj.pts==='number'?pj.pts:'—'}</td><td>${x.n_dir||''}</td><td>${x.n_del||''}</td><td>${x.n_obs||''}</td></tr>`;}).join('');
+  let evalCard='';
+  if(isArb){const ar=arbRubrics(per);evalCard=`<div class="card"><h3>Desempeño acumulado <span class="tag">(promedio ponderado; la nota se mide por pareja)</span></h3><div class="two"><div><div class="muted">Promedio de temporada</div><div class="scorebig">${per.career.prom||'—'}</div><div class="muted" style="margin-top:8px">Partidos dirigidos: <b>${per.career.n_dir}</b></div></div><div>${rubrics(ar)}</div></div></div>`;}
+  let obsCard='';
+  if(per.roles.includes('Observador')){const g=grpBy(observationsOf(per),o=>o.evname);const evs=Object.keys(g);
+    if(evs.length)obsCard=`<div class="card"><h3>Observaciones por evento</h3>`+evs.map(ev=>`<details><summary><span>${shortEv(ev)}</span><span class="tag">${g[ev].length} observaciones</span></summary><div class="inner"><table><thead><tr><th>Pareja</th><th>Partido</th><th>Resultado</th><th>Dific.</th><th>Nota</th></tr></thead><tbody>${g[ev].map(o=>`<tr><td>${o.code} · ${o.names}</td><td>${o.partido}</td><td>${o.resultado}</td><td>${o.dificultad}</td><td><b>${o.puntos}</b></td></tr>`).join('')}</tbody></table></div></details>`).join('')+`</div>`;}
+  let delCard='';
+  if(per.roles.includes('Delegado')){const g=grpBy(delegationsOf(per),o=>o.evname);const evs=Object.keys(g);
+    if(evs.length)delCard=`<div class="card"><h3>Delegaciones por evento</h3>`+evs.map(ev=>`<details><summary><span>${shortEv(ev)}</span><span class="tag">${g[ev].length} partidos</span></summary><div class="inner"><table><thead><tr><th>Fecha</th><th>Partido</th><th>Pareja</th><th>Cancha</th></tr></thead><tbody>${g[ev].map(o=>`<tr><td>${o.fecha}</td><td>${o.partido}</td><td>${o.pareja}</td><td>${o.cancha}</td></tr>`).join('')}</tbody></table></div></details>`).join('')+`</div>`;}
+  const fis=per.fisico;
+  const fisCard=(isArb)?`<div class="card"><h3>Físico y teórico <span class="tag">(último registro)</span></h3>${kv({'Shuttle test':fisicoStr(fis.shuttle),'Catálogo Español':fis.cat_es?fisicoStr(fis.cat_es):'—','Catálogo Inglés':fis.cat_en?fisicoStr(fis.cat_en):'—'})}</div>`:'';
+  return backList(lastKind)+dhead(per.nombre,`${rolePills(per.roles)} ${per.categoria?'&nbsp;<span class="pill p-cat">'+per.categoria+'</span>':''} · ${per.afiliada||''}`)+
+   `<div class="grid k3">${kpi(per.career.eventos,'Eventos')}${kpi(per.career.n_dir,'Dirigidos')}${kpi(per.career.n_obs+per.career.n_del,'Obs/Deleg')}</div>
+    <div class="two">
+      <div class="card"><h3>Datos personales</h3>${kv({'DNI':per.dni||'(sin registro)','Nacimiento':per.fnac?`${per.fnac} (${per.edad} años)`:'','Correo':per.correo,'Teléfono':per.tel,'Afiliada':per.afiliada,'Categoría':per.categoria})}</div>
+      ${fisCard||`<div class="card"><h3>Resumen</h3>${kv({'Eventos':per.career.eventos,'Como observador':per.career.n_obs,'Como delegado':per.career.n_del,'Roles':per.roles.join(', ')})}</div>`}
+    </div>${evalCard}${obsCard}${delCard}
+    <div class="card"><h3>Historial por evento (${per.participaciones.length})</h3><table><thead><tr><th>Evento</th><th>Rol</th><th>Pareja</th><th>Puesto</th><th>Prom.</th><th>Dir.</th><th>Del.</th><th>Obs.</th></tr></thead><tbody>${hist}</tbody></table></div>`;
+}
+function arbRubrics(per){const acc=DATA.fieldnames.map(()=>({s:0,w:0}));per.participaciones.forEach(x=>{if(x.pareja_code){const pj=parejaBy(x.evid,x.pareja_code);if(pj)pj.fields.forEach((v,i)=>{if(typeof v==='number'){const w=(typeof pj.matches_n==='number'?pj.matches_n:1);acc[i].s+=v*w;acc[i].w+=w;}});}});return acc.map(a=>a.w?+(a.s/a.w).toFixed(2):'');}
+
+function viewParConsol(i){
+  const c=DATA.parejas_consolidadas[+i];
+  const members=(c.pids||[]).map(personById).filter(Boolean);
+  const apRows=c.apariciones.map(a=>`<tr class="clk" onclick="render('pare','${a.evid}|${a.code}')"><td><b>${a.evname}</b></td><td>${a.code}</td><td>${a.ranking?'#'+a.ranking:'—'}</td><td>${a.pts}</td><td>${a.n_desig}</td><td>${a.n_eval}</td></tr>`).join('');
+  return backList('par')+dhead(c.names.join(' / '),`Pareja consolidada · ${c.n_eventos} evento(s) juntos`)+
+   `<div class="grid kpis">${kpi(c.n_eventos,'Eventos juntos')}${kpi(c.n_desig,'Dirigidos')}${kpi(c.n_eval,'Evaluados')}${kpi(c.prom||'—','Prom. general')}</div>
+   <div class="two">
+     <div class="card"><h3>Integrantes</h3>${members.map(p=>`<div style="margin:6px 0"><span class="pill p-arb" style="cursor:pointer" onclick="openPerson('${p.pid}')">${p.nombre} ↗</span> ${p.categoria?'<span class="pill p-cat">'+p.categoria+'</span>':''} <span class="tag">${p.afiliada||''}</span></div>`).join('')||'<span class="muted">—</span>'}</div>
+     <div class="card"><h3>Notas por rubro <span class="tag">(promedio de todos los eventos)</span></h3>${rubrics(c.fields)}</div>
+   </div>
+   <div class="card"><h3>Actuación por evento (${c.n_eventos}) <span class="tag">— clic para el detalle del torneo</span></h3>
+     <table><thead><tr><th>Evento</th><th>Cód.</th><th>Puesto</th><th>Prom.</th><th>Dirigidos</th><th>Evaluados</th></tr></thead><tbody>${apRows}</tbody></table></div>`;
+}
+function viewParEvento(arg){
+  const [evid,code]=arg.split('|');const c=parejaBy(evid,code);
+  const mrows=(c.partidos||[]).map(m=>`<tr><td>${m.id||''}</td><td>${m.fecha}</td><td>${m.hora}</td><td>${m.local} vs ${m.visitante}</td><td>${m.resultado||'—'}</td><td>${m.observador||'—'}</td><td>${m.evaluado?'<span class="pill p-ok">Sí</span>':'<span class="pill p-warn">No</span>'}</td><td>${m.evaluado?'<b>'+m.puntos+'</b>':'—'}</td></tr>`).join('');
+  return `<button class="back" onclick="history.length>1?history.back():render('par')">← Volver</button>`+dhead(`Pareja ${c.code}`,`${c.names.join(' / ')} · ${c.evname} · Puesto #${c.ranking||'-'}`)+
+   `<div class="grid k3">${kpi(c.n_desig,'Dirigidos')}${kpi(c.n_eval,'Evaluados')}${kpi(c.pts||'—','Promedio')}</div>
+   <div class="two"><div class="card"><h3>Resumen</h3>${kv({'Evento':c.evname,'Puesto (torneo)':'#'+(c.ranking||'-'),'Dirigidos':c.n_desig,'Evaluados':c.n_eval})}</div>
+   <div class="card"><h3>Notas por rubro (este evento)</h3>${rubrics(c.fields)}</div></div>
+   <div class="card"><h3>Partidos dirigidos (${c.n_desig})</h3><table><thead><tr><th>ID</th><th>Fecha</th><th>Hora</th><th>Partido</th><th>Resultado</th><th>Observador</th><th>Evaluado</th><th>Nota</th></tr></thead><tbody>${mrows}</tbody></table></div>`;
+}
+
+function viewVenue(id){
+  const v=DATA.venues.find(x=>x.id===id);
+  const parts=DATA.partidos.filter(p=>v.canchas.some(c=>c.evid===p.evid&&c.nombre===p.cancha));
+  const prows=parts.slice(0,200).map(m=>`<tr><td><span class="pill p-ev">${shortEv(m.evname)}</span></td><td>${m.fecha}</td><td>${m.local} vs ${m.visitante}</td><td>${m.pareja_code||''}</td></tr>`).join('');
+  return backList('sedes')+dhead(v.id,v.sede)+`
+   <div class="grid k3">${kpi(v.n_eventos,'Eventos')}${kpi(v.n_partidos,'Partidos')}${kpi(v.canchas.length,'Registros')}</div>
+   <div class="card"><h3>Identificación de la sede</h3>${kv({'ID interno':v.id,'Sede / dirección':v.sede,'Eventos':v.eventos.join(' · ')})}</div>
+   <div class="card"><h3>Anotaciones / registros de la sede</h3><p class="tag">Registrá problemas, capacidad, contactos o cuestiones para futuros eventos.</p><textarea placeholder="Escribí una anotación…" oninput="notes['${v.id}']=this.value">${notes[v.id]||''}</textarea><p class="tag" style="margin-top:6px">En este prototipo se guarda solo durante la sesión.</p></div>
+   <div class="card"><h3>Partidos en esta sede (${parts.length})</h3><table><thead><tr><th>Evento</th><th>Fecha</th><th>Partido</th><th>Pareja</th></tr></thead><tbody>${prows}</tbody></table></div>`;
+}
+
+function catOrder(c){return (DATA.cat_order && DATA.cat_order[c]!==undefined)?DATA.cat_order[c]:9;}
+function viewRank(){
+  const cats=['IHF','Nacional A','Nacional B','Regional','Federativo','Local'];
+  const entries=DATA.parejas_consolidadas.map(c=>{
+    const ms=(c.pids||[]).map(personById).filter(Boolean);
+    const cA=ms[0]?(ms[0].categoria||''):''; const cB=ms[1]?(ms[1].categoria||''):'';
+    const oA=catOrder(cA),oB=catOrder(cB);
+    return {c,names:c.names.join(' / '),cA,cB,seg:Math.min(oA,oB),pure:(cA&&cB&&cA===cB),prom:(typeof c.prom==='number'?c.prom:-1)};
+  });
+  let html='',pos=0;
+  const rowf=(e,cat,mix)=>{pos++;const idx=DATA.parejas_consolidadas.indexOf(e.c);
+    const catlbl=mix?`<span class="pill p-warn">mixta</span> ${e.cA||'s/c'} / ${e.cB||'s/c'}`:`<span class="pill p-cat">${cat}</span>`;
+    return `<tr class="clk" onclick="render('par','${idx}')"><td><b>${pos}</b></td><td><b>${e.names}</b></td><td>${catlbl}</td><td>${e.prom>=0?e.prom:'—'}</td><td>${e.c.n_eventos}</td><td>${e.c.n_desig}</td></tr>`;};
+  cats.forEach((cat,ci)=>{
+    const seg=entries.filter(e=>e.seg===ci); if(!seg.length)return;
+    const pures=seg.filter(e=>e.pure).sort((a,b)=>b.prom-a.prom);
+    const mixed=seg.filter(e=>!e.pure).sort((a,b)=>b.prom-a.prom);
+    html+=`<div class="cathead">${cat} · ${seg.length} parejas${mixed.length?` (${pures.length} puras + ${mixed.length} mixtas)`:''}</div>`;
+    html+=`<table><thead><tr><th>#</th><th>Pareja</th><th>Categoría</th><th>Prom. pareja</th><th>Eventos</th><th>Dirig.</th></tr></thead><tbody>`;
+    html+=pures.map(e=>rowf(e,cat,false)).join('');
+    if(mixed.length)html+=`<tr><td></td><td colspan="5" class="tag" style="padding:10px 10px 4px">▾ Parejas mixtas (integrante de mayor categoría: ${cat})</td></tr>`+mixed.map(e=>rowf(e,cat,true)).join('');
+    html+=`</tbody></table>`;
+  });
+  const sinc=entries.filter(e=>e.seg>=9);
+  if(sinc.length){sinc.sort((a,b)=>b.prom-a.prom);
+    html+=`<div class="cathead">Sin categoría · ${sinc.length}</div><table><thead><tr><th>#</th><th>Pareja</th><th>Categoría</th><th>Prom. pareja</th><th>Eventos</th><th>Dirig.</th></tr></thead><tbody>`+sinc.map(e=>rowf(e,'—',true)).join('')+`</tbody></table>`;}
+  const nopito=DATA.ranking2025.filter(r=>!r.pito2026);
+  const npRows=nopito.map(r=>`<tr><td>${r.pos||''}</td><td><b>${r.nombre}</b></td><td>${r.cat||'—'}</td><td>${r.afil||'—'}</td></tr>`).join('');
+  return pageHdr('Ranking activo 2026')+`
+   <div class="card"><p class="muted" style="line-height:1.6">Ranking por pareja, acumulado de la temporada. Cada pareja se ubica en el segmento de su categoría: si ambos integrantes son de la misma categoría es una <b>pareja pura</b>; si son de categorías distintas, la pareja va al segmento de la categoría más alta de los dos, pero <b>debajo de las parejas puras</b>. Dentro de cada grupo se ordena por el promedio de la pareja. Orden de categorías: IHF → Nacional A → Nacional B → Regional → Federativo → Local. Categorías tomadas del ranking oficial 2025.</p></div>
+   <div class="card">${html}</div>
+   <div class="card"><h3>Del ranking 2025, aún no dirigieron en 2026 (${nopito.length})</h3>
+     <p class="tag" style="margin-bottom:8px">Árbitros del ranking oficial 2025 que todavía no participaron en ningún evento de esta temporada.</p>
+     <table><thead><tr><th>Pos. 2025</th><th>Árbitro</th><th>Categoría</th><th>Afiliada</th></tr></thead><tbody>${npRows}</tbody></table></div>`;
+}
+function viewRank2025(){
+  const R=DATA.ranking2025;
+  const rows=R.map(r=>`<tr><td>${r.pos||''}</td><td><b>${r.nombre}</b></td><td>${r.afil||'—'}</td><td>${r.cat||'—'}</td><td>${typeof r.arb==='number'?r.arb.toFixed(2):'—'}</td><td>${typeof r.teo==='number'?r.teo.toFixed(2):'—'}</td><td>${typeof r.prom==='number'?r.prom.toFixed(2):'—'}</td><td>${r.eventos||''}</td><td>${r.yoyo||'—'}</td><td>${r.pito2026?'<span class="pill p-ok">Sí</span>':'<span class="pill p-warn">No</span>'}</td></tr>`).join('');
+  const pit=R.filter(r=>r.pito2026).length;
+  return pageHdr('Ranking oficial 2025')+`
+   <div class="grid k3">${kpi(R.length,'Árbitros 2025')}${kpi(pit,'Ya pitaron en 2026')}${kpi(R.length-pit,'Aún no pitaron')}</div>
+   <input id="searchbox" class="search" placeholder="Buscar…"/>
+   <div class="card"><table><thead><tr><th>N°</th><th>Apellido y nombre</th><th>Fed/Asoc</th><th>Categoría</th><th>Arbitraje</th><th>Teórico</th><th>Prom. gral.</th><th>Eventos</th><th>Yoyo</th><th>2026</th></tr></thead><tbody id="rows">${R.map(r=>`<tr data-s="${norm(r.nombre+' '+r.afil+' '+r.cat)}"><td>${r.pos||''}</td><td><b>${r.nombre}</b></td><td>${r.afil||'—'}</td><td>${r.cat||'—'}</td><td>${typeof r.arb==='number'?r.arb.toFixed(2):'—'}</td><td>${typeof r.teo==='number'?r.teo.toFixed(2):'—'}</td><td>${typeof r.prom==='number'?r.prom.toFixed(2):'—'}</td><td>${r.eventos||''}</td><td>${r.yoyo||'—'}</td><td>${r.pito2026?'<span class="pill p-ok">Sí</span>':'<span class="pill p-warn">No</span>'}</td></tr>`).join('')}</tbody></table></div>`;
+}
+
+function viewBD(){
+  const P=[...DATA.personas].sort((a,b)=>norm(a.nombre).localeCompare(norm(b.nombre)));
+  const rows=P.map(p=>`<tr class="clk" data-s="${norm(p.nombre+' '+(p.dni||'')+' '+p.afiliada+' '+p.categoria+' '+(p.correo||''))}" onclick="openPerson('${p.pid}')"><td>${p.dni?p.dni:'<span class="pill p-warn">sin DNI</span>'}</td><td><b>${p.nombre}</b></td><td>${p.afiliada||'—'}</td><td>${p.categoria||'—'}</td><td>${p.roles.join(', ')}</td><td>${p.career.eventos}</td><td>${p.correo||'—'}</td></tr>`).join('');
+  const sinDni=P.filter(p=>!p.dni);
+  const dup=[];for(let i=0;i<P.length;i++)for(let j=i+1;j<P.length;j++){const A=tokset(P[i].nombre),B=tokset(P[j].nombre);let sh=0;A.forEach(x=>{if(B.has(x))sh++});if(sh>=2)dup.push([P[i],P[j]]);}
+  const checks=`<div class="two">
+    <div class="card"><h3>Sin DNI (${sinDni.length}) <span class="tag">— revisar carga</span></h3>${sinDni.length?('<table><tbody>'+sinDni.map(p=>`<tr class="clk" onclick="openPerson('${p.pid}')"><td>${p.nombre}</td><td>${p.roles.join(', ')}</td><td>${p.career.eventos} ev.</td></tr>`).join('')+'</tbody></table>'):'<p class="muted">Ninguna.</p>'}</div>
+    <div class="card"><h3>Posibles duplicados (${dup.length})</h3>${dup.length?('<table><tbody>'+dup.map(d=>`<tr><td>${d[0].nombre} (${d[0].dni||'-'})</td><td>~</td><td>${d[1].nombre} (${d[1].dni||'-'})</td></tr>`).join('')+'</tbody></table>'):'<span class="pill p-ok">Sin duplicados detectados</span>'}</div></div>`;
+  return pageHdr('Base de datos de personas')+`
+   <div class="grid k3">${kpi(P.length,'Personas')}${kpi(P.filter(p=>p.dni).length,'Con DNI')}${kpi(sinDni.length,'Sin DNI')}</div>${checks}
+   <input id="searchbox" class="search" placeholder="Buscar…"/>
+   <div class="card"><h3>Todas las personas (${P.length})</h3><table><thead><tr><th>DNI</th><th>Nombre</th><th>Afiliada</th><th>Categoría</th><th>Roles</th><th>Ev.</th><th>Correo</th></tr></thead><tbody id="rows">${rows}</tbody></table></div>`;
+}
+function viewImport(){
+  const rows=DATA.events.map(e=>`<tr><td><b>${e.nombre}</b></td><td>${e.personas}</td><td>${e.parejas}</td><td>${e.partidos}</td></tr>`).join('');
+  return pageHdr('Importar evento')+`
+   <div class="card"><h3>Cargar un nuevo torneo</h3><p class="muted" style="margin-bottom:16px;line-height:1.6">Se suben las dos planillas del evento. El importador normaliza el DNI, unifica nombres (tolera typos), propaga la afiliada de la pareja, incorpora shuttle y catálogos, y actualiza legajos, parejas consolidadas y el ranking.</p>
+   <div class="two"><div class="impzone"><div style="font-size:26px">⤓</div><b>Planilla de logística</b><br><span class="tag">DELEGACION</span></div><div class="impzone"><div style="font-size:26px">⤓</div><b>Planilla de notas</b><br><span class="tag">TEMPLATE</span></div></div>
+   <div style="margin-top:16px" class="tag">Importación simulada; los 7 eventos ya están integrados.</div></div>
+   <div class="card"><h3>Eventos integrados (${DATA.events.length})</h3><table><thead><tr><th>Evento</th><th>Personas</th><th>Parejas</th><th>Partidos</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+}
+</script></body></html>
