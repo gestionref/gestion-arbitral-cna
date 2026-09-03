@@ -53,15 +53,7 @@ details summary::-webkit-details-marker{display:none}
 details summary::after{content:'▾';color:var(--mut)}details[open] summary::after{content:'▴'}
 details .inner{padding:6px 14px 12px}
 @media(max-width:900px){.kpis,.k3{grid-template-columns:repeat(2,1fr)}.two{grid-template-columns:1fr}.side{display:none}}
-</style></head><body><noscript><div style="position:fixed;inset:0;background:#0b1220;color:#e8eef7;display:flex;align-items:center;justify-content:center;padding:30px;font-family:Arial">Esta aplicación necesita JavaScript.</div></noscript><div id="login"><div class="loginbox"><div class="brand"><div class="logo">CNA</div><h1>Gestión Arbitral CNA</h1></div><div class="sub">Comisión Nacional de Árbitros · Temporada 2026</div><label>Email</label><input id="u" type="email" placeholder="tu@correo.com" autocomplete="username"/><label>Contraseña</label><input id="p" type="password" placeholder="••••••••" autocomplete="current-password"/><button class="btn" id="loginbtn" onclick="doLogin()">Ingresar</button><div id="loginerr" style="color:#fca5a5;font-size:12px;margin-top:12px;text-align:center;min-height:16px"></div><div class="hint">Acceso para staff de la CNA</div></div></div><div id="app" class="hide"><aside class="side"><div class="brand"><div class="logo">CNA</div><h1>Gestión Arbitral</h1></div><div class="season">Temporada 2026 · 7 eventos</div><nav class="nav" id="nav"><a data-v="dash" class="active"><span class="ic">▦</span> Panel</a>
-<a data-v="arb"><span class="ic">▤</span> Árbitros</a>
-<a data-v="par"><span class="ic">⚌</span> Parejas</a>
-<a data-v="sedes"><span class="ic">◱</span> Sedes / canchas</a>
-<a data-v="obs"><span class="ic">◎</span> Observadores</a>
-<a data-v="del"><span class="ic">✦</span> Delegados</a>
-<a data-v="rank"><span class="ic">★</span> Ranking activo</a>
-<a data-v="r25"><span class="ic">≣</span> Ranking 2025</a>
-<a data-v="bd"><span class="ic">▧</span> Base de datos</a></nav><div class="foot">CNA · en vivo<br><a onclick="logout();return false" style="color:var(--acc2);cursor:pointer">Salir</a></div></aside><main class="main" id="main"></main></div><script>
+</style></head><body><noscript><div style="position:fixed;inset:0;background:#0b1220;color:#e8eef7;display:flex;align-items:center;justify-content:center;padding:30px;font-family:Arial">Esta aplicación necesita JavaScript.</div></noscript><div id="login"><div class="loginbox"><div class="brand"><div class="logo">CNA</div><h1>Gestión Arbitral CNA</h1></div><div class="sub">Comisión Nacional de Árbitros · Temporada 2026</div><label>Email</label><input id="u" type="email" placeholder="tu@correo.com" autocomplete="username"/><label>Contraseña</label><input id="p" type="password" placeholder="••••••••" autocomplete="current-password"/><button class="btn" id="loginbtn" onclick="doLogin()">Ingresar</button><div id="loginerr" style="color:#fca5a5;font-size:12px;margin-top:12px;text-align:center;min-height:16px"></div><div class="hint">Acceso para staff de la CNA</div></div></div><div id="app" class="hide"><aside class="side"><div class="brand"><div class="logo">CNA</div><h1>Gestión Arbitral</h1></div><div class="season">Temporada 2026 · 9 eventos</div><nav class="nav" id="nav"><a data-v="dash" class="active"><span class="ic">▦</span> Panel</a><a data-v="arb"><span class="ic">▤</span> Árbitros</a><a data-v="par"><span class="ic">⚌</span> Parejas</a><a data-v="sedes"><span class="ic">◱</span> Sedes / canchas</a><a data-v="obs"><span class="ic">◎</span> Observadores</a><a data-v="del"><span class="ic">✦</span> Delegados</a><a data-v="rank"><span class="ic">★</span> Ranking activo</a><a data-v="r25"><span class="ic">≣</span> Ranking 2025</a><a data-v="bd"><span class="ic">▧</span> Base de datos</a></nav><div class="foot">CNA · en vivo<br><a onclick="logout();return false" style="color:var(--acc2);cursor:pointer">Salir</a></div></aside><main class="main" id="main"></main></div><script>
 let DATA=null;
 const SB=supabase.createClient('https://ikcvwpgrfxsptmmpburw.supabase.co','sb_publishable_wGoUBI3v5faiVIjuxN-oRA_Pl0JKAxW');
 let curEv='ALL',curView='dash',curArg=null,lastKind='arb';
@@ -78,26 +70,48 @@ function participatesIn(per,evid){return per.participaciones.some(x=>x.evid===ev
 function evFilterPerson(per){return curEv==='ALL'||participatesIn(per,curEv);}
 
 async function doLogin(){
-  const em=$('#u').value.trim(), pw=$('#p').value;
-  const btn=$('#loginbtn'); const err=$('#loginerr');
+  const em=$('#u').value.trim(), pw=$('#p').value; const btn=$('#loginbtn'), err=$('#loginerr');
   err.textContent=''; btn.disabled=true; btn.textContent='Ingresando…';
   try{
     const {error}=await SB.auth.signInWithPassword({email:em,password:pw});
     if(error){err.textContent='Email o contraseña incorrectos.'; btn.disabled=false; btn.textContent='Ingresar'; return;}
-    await loadData();
-    $('#login').classList.add('hide'); $('#app').classList.remove('hide'); render('dash');
-  }catch(e){ err.textContent='No se pudo conectar. Revisá tu conexión.'; }
+    await loadData(); $('#login').classList.add('hide'); $('#app').classList.remove('hide'); render('dash');
+  }catch(e){ err.textContent='No se pudo conectar. '+(e&&e.message?e.message:''); }
   btn.disabled=false; btn.textContent='Ingresar';
 }
 async function loadData(){
   const {data,error}=await SB.from('app_data').select('data').eq('id',1).single();
   if(error||!data){ $('#loginerr').textContent='No se pudieron cargar los datos ('+(error?error.message:'sin datos')+').'; throw new Error('load'); }
   DATA=data.data;
+  try{ const ov=await SB.from('overrides').select('*'); if(ov&&ov.data) ov.data.forEach(applyOverrideRow); }catch(e){}
 }
+function applyOverrideRow(o){ const p=(DATA.personas||[]).find(x=>x.pid===o.persona_dni||x.dni===o.persona_dni); if(!p)return; if(o.categoria!=null)p.categoria=o.categoria; if(o.afiliada!=null)p.afiliada=o.afiliada; if(o.correo!=null)p.correo=o.correo; if(o.telefono!=null)p.tel=o.telefono; }
 document.addEventListener('keydown',e=>{if(e.key==='Enter'&&!$('#login').classList.contains('hide'))doLogin();});
 async function logout(){ await SB.auth.signOut(); DATA=null; $('#app').classList.add('hide'); $('#login').classList.remove('hide'); $('#u').value=''; $('#p').value=''; }
-// sesión persistente: si ya está logueado, entrar directo
 window.addEventListener('load',async()=>{ const {data}=await SB.auth.getSession(); if(data&&data.session){ try{ await loadData(); $('#login').classList.add('hide'); $('#app').classList.remove('hide'); render('dash'); }catch(e){} } });
+function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');}
+function editCard(per){
+  const cats=['','IHF','Nacional A','Nacional B','Regional','Federativo','Local'];
+  const opts=cats.map(c=>`<option value="${c}" ${(per.categoria||'')===c?'selected':''}>${c||'(sin categoría)'}</option>`).join('');
+  const inp='width:100%;padding:8px;background:#0c1526;border:1px solid var(--line);border-radius:8px;color:var(--ink)';
+  return `<details class="card" style="padding:0"><summary style="padding:14px 18px;font-weight:600">✎ Editar datos del legajo</summary><div class="inner" style="padding:8px 18px 18px">
+    <div class="kv" style="grid-template-columns:130px 1fr;gap:10px 12px">
+     <div class="k">Categoría</div><div><select id="ed_cat" style="${inp};max-width:240px">${opts}</select></div>
+     <div class="k">Afiliada</div><div><input id="ed_af" style="${inp}" value="${esc(per.afiliada)}"/></div>
+     <div class="k">Correo</div><div><input id="ed_co" style="${inp}" value="${esc(per.correo)}"/></div>
+     <div class="k">Teléfono</div><div><input id="ed_te" style="${inp}" value="${esc(per.tel)}"/></div>
+    </div>
+    <button class="btn" style="width:auto;margin-top:14px;padding:9px 20px" onclick="saveOverride('${per.pid}')">Guardar cambios</button>
+    <span id="ed_msg" class="tag" style="margin-left:12px"></span>
+  </div></details>`;
+}
+async function saveOverride(pid){
+  const msg=$('#ed_msg'); if(msg)msg.textContent='Guardando…';
+  const row={persona_dni:pid,categoria:$('#ed_cat').value,afiliada:$('#ed_af').value,correo:$('#ed_co').value,telefono:$('#ed_te').value,updated_at:new Date().toISOString()};
+  const {error}=await SB.from('overrides').upsert(row,{onConflict:'persona_dni'});
+  if(error){ if(msg)msg.textContent='Error al guardar: '+error.message; return; }
+  applyOverrideRow(row); if(msg)msg.textContent='Guardado ✓'; setTimeout(()=>render('per',pid),400);
+}
 document.addEventListener('DOMContentLoaded',()=>{const n=$('#nav');if(n)n.addEventListener('click',e=>{const a=e.target.closest('a');if(a)render(a.dataset.v);});});
 function setActive(v){document.querySelectorAll('#nav a').forEach(a=>a.classList.toggle('active',a.dataset.v===v));}
 function setEv(v){curEv=v;render(curView,curArg);}
@@ -200,7 +214,7 @@ function viewPerson(pid){
   const fis=per.fisico;
   const fisCard=(isArb)?`<div class="card"><h3>Físico y teórico <span class="tag">(último registro)</span></h3>${kv({'Shuttle test':fisicoStr(fis.shuttle),'Catálogo Español':fis.cat_es?fisicoStr(fis.cat_es):'—','Catálogo Inglés':fis.cat_en?fisicoStr(fis.cat_en):'—'})}</div>`:'';
   return backList(lastKind)+dhead(per.nombre,`${rolePills(per.roles)} ${per.categoria?'&nbsp;<span class="pill p-cat">'+per.categoria+'</span>':''} · ${per.afiliada||''}`)+
-   `<div class="grid k3">${kpi(per.career.eventos,'Eventos')}${kpi(per.career.n_dir,'Dirigidos')}${kpi(per.career.n_obs+per.career.n_del,'Obs/Deleg')}</div>
+   `<div class="grid k3">${kpi(per.career.eventos,'Eventos')}${kpi(per.career.n_dir,'Dirigidos')}${kpi(per.career.n_obs+per.career.n_del,'Obs/Deleg')}</div>${editCard(per)}
     <div class="two">
       <div class="card"><h3>Datos personales</h3>${kv({'DNI':per.dni||'(sin registro)','Nacimiento':per.fnac?`${per.fnac} (${per.edad} años)`:'','Correo':per.correo,'Teléfono':per.tel,'Afiliada':per.afiliada,'Categoría':per.categoria})}</div>
       ${fisCard||`<div class="card"><h3>Resumen</h3>${kv({'Eventos':per.career.eventos,'Como observador':per.career.n_obs,'Como delegado':per.career.n_del,'Roles':per.roles.join(', ')})}</div>`}
