@@ -52,6 +52,11 @@ details summary{cursor:pointer;padding:10px 14px;background:#0e1a30;font-weight:
 details summary::-webkit-details-marker{display:none}
 details summary::after{content:'▾';color:var(--mut)}details[open] summary::after{content:'▴'}
 details .inner{padding:6px 14px 12px}
+.evgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:10px}
+.evbtn{text-align:left;background:#0e1a30;border:1px solid var(--line);border-radius:12px;padding:14px 16px;cursor:pointer;color:var(--ink)}
+.evbtn:hover{border-color:var(--acc);background:#1a2a49}
+.evbtn-t{font-weight:700;font-size:13px}
+.evbtn-s{color:var(--mut);font-size:11px;margin-top:5px}
 @media(max-width:900px){.kpis,.k3{grid-template-columns:repeat(2,1fr)}.two{grid-template-columns:1fr}.side{display:none}}
 </style></head><body><noscript><div style="position:fixed;inset:0;background:#0b1220;color:#e8eef7;display:flex;align-items:center;justify-content:center;padding:30px;font-family:Arial">Esta aplicación necesita JavaScript.</div></noscript><div id="login"><div class="loginbox"><div class="brand"><div class="logo">CNA</div><h1>Gestión Arbitral CNA</h1></div><div class="sub">Comisión Nacional de Árbitros · Temporada 2026</div><label>Email</label><input id="u" type="email" placeholder="tu@correo.com" autocomplete="username"/><label>Contraseña</label><input id="p" type="password" placeholder="••••••••" autocomplete="current-password"/><button class="btn" id="loginbtn" onclick="doLogin()">Ingresar</button><div id="loginerr" style="color:#fca5a5;font-size:12px;margin-top:12px;text-align:center;min-height:16px"></div><div class="hint">Acceso para staff de la CNA</div></div></div><div id="app" class="hide"><aside class="side"><div class="brand"><div class="logo">CNA</div><h1>Gestión Arbitral</h1></div><div class="season">Temporada 2026 · 9 eventos</div><nav class="nav" id="nav"><a data-v="dash" class="active"><span class="ic">▦</span> Panel</a><a data-v="arb"><span class="ic">▤</span> Árbitros</a><a data-v="par"><span class="ic">⚌</span> Parejas</a><a data-v="sedes"><span class="ic">◱</span> Sedes / canchas</a><a data-v="obs"><span class="ic">◎</span> Observadores</a><a data-v="del"><span class="ic">✦</span> Delegados</a><a data-v="rank"><span class="ic">★</span> Ranking activo</a><a data-v="r25"><span class="ic">≣</span> Ranking 2025</a><a data-v="bd"><span class="ic">▧</span> Base de datos</a></nav><div class="foot">CNA · en vivo<br><a onclick="logout();return false" style="color:var(--acc2);cursor:pointer">Salir</a></div></aside><main class="main" id="main"></main></div><script>
 let DATA=null;
@@ -119,13 +124,16 @@ function setEv(v){curEv=v;render(curView,curArg);}
 function render(v,arg){
   curView=v;curArg=arg;
   if(['arb','obs','del'].includes(v)&&!arg)lastKind=v;
-  let nvk=v; if(v==='per')nvk=lastKind; else if(v==='evd')nvk='dash'; else if(v==='pare')nvk='par';
+  let nvk=v; if(v==='per')nvk=lastKind; else if(v==='evd'||v==='evobs'||v==='evdel'||v==='evsede')nvk='dash'; else if(v==='pare')nvk='par';
   setActive(nvk);
   const m=$('#main');
-  if(v==='dash')m.innerHTML=(curEv==='ALL')?viewDash():viewEventDetail(curEv);
+  if(v==='dash')m.innerHTML=viewDash();
   else if(v==='evd')m.innerHTML=viewEventDetail(arg);
   else if(v==='par')m.innerHTML=(arg!=null)?viewParConsol(arg):viewList('par');
   else if(v==='pare')m.innerHTML=viewParEvento(arg);
+  else if(v==='evobs')m.innerHTML=viewEvObs(arg);
+  else if(v==='evdel')m.innerHTML=viewEvDel(arg);
+  else if(v==='evsede')m.innerHTML=viewEvSede(arg);
   else if(v==='sedes')m.innerHTML=arg?viewVenue(arg):viewList('sedes');
   else if(['arb','obs','del'].includes(v))m.innerHTML=arg?viewPerson(arg):viewList(v);
   else if(v==='per')m.innerHTML=viewPerson(arg);
@@ -142,29 +150,42 @@ function kpi(n,l){return `<div class="kpi"><div class="n">${n}</div><div class="
 function rolePills(rs){return rs.map(r=>`<span class="pill ${r==='Árbitro'?'p-arb':r==='Delegado'?'p-del':'p-obs'}">${r}</span>`).join('');}
 
 function viewDash(){
-  const evRows=DATA.events.map(e=>`<tr class="clk" onclick="render('evd','${e.id}')"><td><b>${e.nombre}</b></td><td>${e.personas}</td><td>${e.parejas}</td><td>${e.partidos}</td><td>→</td></tr>`).join('');
+  const nArb=DATA.personas.filter(p=>p.roles.includes('Árbitro')).length;
+  const nDel=DATA.personas.filter(p=>p.roles.includes('Delegado')).length;
+  const nObs=DATA.personas.filter(p=>p.roles.includes('Observador')).length;
+  const btns=DATA.events.map(e=>`<button class="evbtn" onclick="render('evd','${e.id}')"><div class="evbtn-t">${e.nombre}</div><div class="evbtn-s">${e.parejas} parejas · ${e.partidos} partidos</div></button>`).join('');
   const rec=[...DATA.personas].sort((a,b)=>b.career.eventos-a.career.eventos).slice(0,10).map(p=>`<tr class="clk" onclick="openPerson('${p.pid}')"><td><b>${p.nombre}</b></td><td>${rolePills(p.roles)}</td><td>${p.career.eventos}</td></tr>`).join('');
-  return pageHdr('Panel de temporada')+`
-   <div class="grid kpis">${kpi(DATA.events.length,'Eventos')}${kpi(DATA.personas.length,'Personas')}${kpi(DATA.parejas_consolidadas.length,'Parejas')}${kpi(DATA.partidos.length,'Partidos')}</div>
-   <div class="two">
-     <div class="card"><h3>Eventos de la temporada <span class="tag">— clic para el detalle</span></h3><table><thead><tr><th>Evento</th><th>Pers.</th><th>Parejas</th><th>Part.</th><th></th></tr></thead><tbody>${evRows}</tbody></table></div>
-     <div class="card"><h3>Mayor presencia</h3><table><thead><tr><th>Persona</th><th>Roles</th><th>Ev.</th></tr></thead><tbody>${rec}</tbody></table></div>
-   </div>`;
+  return `<div class="top"><h2>Panel de temporada</h2></div>
+   <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(140px,1fr))">${kpi(DATA.events.length,'Eventos')}${kpi(nArb,'Árbitros')}${kpi(nDel,'Delegados')}${kpi(nObs,'Observadores')}${kpi(DATA.parejas_consolidadas.length,'Parejas')}${kpi(DATA.partidos.length,'Partidos')}</div>
+   <div class="card"><h3>Eventos de la temporada <span class="tag">— tocá un evento para ver su detalle</span></h3><div class="evgrid">${btns}</div></div>
+   <div class="card"><h3>Mayor presencia en la temporada</h3><table><thead><tr><th>Persona</th><th>Roles</th><th>Ev.</th></tr></thead><tbody>${rec}</tbody></table></div>`;
 }
 function viewEventDetail(evid){
   const e=DATA.events.find(x=>x.id===evid);
   const pj=DATA.parejas.filter(p=>p.evid===evid).slice().sort((a,b)=>(a.ranking||99)-(b.ranking||99));
-  const pjRows=pj.map(p=>`<tr class="clk" onclick="render('pare','${p.evid}|${p.code}')"><td><span class="rankbadge ${p.ranking===1?'top':''}">${p.ranking||'-'}</span></td><td><b>${p.code}</b></td><td>${p.names.join(' / ')}</td><td>${p.pts}</td><td>${p.n_desig}</td><td>${p.n_eval}</td></tr>`).join('');
+  const obsP=DATA.personas.filter(p=>p.participaciones.some(x=>x.evid===evid&&x.rol==='Observador'));
+  const delP=DATA.personas.filter(p=>p.participaciones.some(x=>x.evid===evid&&x.rol==='Delegado'));
+  const arbP=DATA.personas.filter(p=>p.participaciones.some(x=>x.evid===evid&&x.rol==='Árbitro'));
   const ven=DATA.venues.filter(v=>v.canchas.some(c=>c.evid===evid));
-  const venRows=ven.map(v=>{const c=v.canchas.filter(x=>x.evid===evid);return `<tr class="clk" onclick="render('sedes','${v.id}')"><td><b>${v.id}</b></td><td>${v.sede}</td><td>${c.reduce((a,x)=>a+x.n,0)}</td></tr>`;}).join('');
-  const arb=DATA.personas.filter(p=>p.participaciones.some(x=>x.evid===evid&&x.rol==='Árbitro'));
-  return `<button class="back" onclick="setEv('ALL')">← Volver al panel</button>`+pageHdr(e.nombre)+`
-   <div class="grid kpis">${kpi(e.personas,'Personas')}${kpi(e.parejas,'Parejas')}${kpi(e.partidos,'Partidos')}${kpi(ven.length,'Sedes')}</div>
-   <div class="card"><h3>Ranking del torneo — parejas</h3><table><thead><tr><th>Puesto</th><th>Cód.</th><th>Integrantes</th><th>Prom.</th><th>Dirigidos</th><th>Evaluados</th></tr></thead><tbody>${pjRows}</tbody></table></div>
+  const parts=DATA.partidos.filter(m=>m.evid===evid);
+  let sp=0,np=0; pj.forEach(p=>(p.partidos||[]).forEach(m=>{if(m.evaluado&&typeof m.puntos==='number'){sp+=m.puntos;np++;}}));
+  const promPart=np?(sp/np).toFixed(2):'—';
+  let st=0,nt=0; arbP.forEach(p=>{const f=(p.fisico_ev||{})[evid]; if(f&&typeof f.cat_es==='number'){st+=f.cat_es;nt++;}});
+  const promTeo=nt?Math.round(st/nt*100)+'%':'—';
+  const pjRows=pj.map(p=>`<tr class="clk" onclick="render('pare','${evid}|${p.code}')"><td><span class="rankbadge ${p.ranking===1?'top':''}">${p.ranking||'-'}</span></td><td><b>${p.code}</b></td><td>${p.names.join(' / ')}</td><td>${p.pts}</td><td>${p.n_desig}</td><td>${p.n_eval}</td></tr>`).join('');
+  const obsRows=obsP.map(p=>{const x=p.participaciones.find(y=>y.evid===evid&&y.rol==='Observador');return `<tr class="clk" onclick="render('evobs','${evid}|${p.pid}')"><td><b>${p.nombre}</b></td><td>${x?x.n_obs:''}</td></tr>`;}).join('');
+  const delRows=delP.map(p=>{const x=p.participaciones.find(y=>y.evid===evid&&y.rol==='Delegado');return `<tr class="clk" onclick="render('evdel','${evid}|${p.pid}')"><td><b>${p.nombre}</b></td><td>${x?x.n_del:''}</td></tr>`;}).join('');
+  const venRows=ven.map(v=>{const c=v.canchas.filter(x=>x.evid===evid);return `<tr class="clk" onclick="render('evsede','${evid}|${v.id}')"><td><b>${v.id}</b></td><td>${v.sede}</td><td>${c.reduce((a,x)=>a+x.n,0)}</td></tr>`;}).join('');
+  const partRows=parts.map(m=>`<tr><td>${m.id}</td><td>${m.fecha}</td><td>${m.hora}</td><td>${m.cancha}</td><td>${m.zona}</td><td>${m.local} vs ${m.visitante}</td><td>${m.pareja_code||''}</td></tr>`).join('');
+  return `<button class="back" onclick="render('dash')">← Volver al panel</button><div class="top"><h2>${e.nombre}</h2></div>
+   <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(150px,1fr))">${kpi(pj.length,'Parejas')}${kpi(obsP.length,'Observadores')}${kpi(delP.length,'Delegados')}${kpi(parts.length,'Partidos')}${kpi(ven.length,'Sedes')}${kpi(np,'Observaciones')}${kpi(promPart,'Prom. partidos')}${kpi(promTeo,'Prom. teórico')}</div>
+   <div class="card"><h3>Parejas arbitrales <span class="tag">— tocá para ver sus partidos</span></h3><table><thead><tr><th>Puesto</th><th>Cód.</th><th>Integrantes</th><th>Prom.</th><th>Dirig.</th><th>Eval.</th></tr></thead><tbody>${pjRows}</tbody></table></div>
    <div class="two">
-     <div class="card"><h3>Sedes utilizadas</h3><table><thead><tr><th>ID</th><th>Sede</th><th>Part.</th></tr></thead><tbody>${venRows}</tbody></table></div>
-     <div class="card"><h3>Árbitros del evento (${arb.length})</h3><table><thead><tr><th>Nombre</th><th>Categoría</th><th>Dirigidos</th></tr></thead><tbody>${arb.map(p=>{const x=p.participaciones.find(y=>y.evid===evid);return `<tr class="clk" onclick="openPerson('${p.pid}')"><td>${p.nombre}</td><td>${x.categoria_norm||p.categoria||'—'}</td><td>${x.n_dir}</td></tr>`;}).join('')}</tbody></table></div>
-   </div>`;
+     <div class="card"><h3>Observadores (${obsP.length})</h3><table><thead><tr><th>Nombre</th><th>Observados</th></tr></thead><tbody>${obsRows}</tbody></table></div>
+     <div class="card"><h3>Delegados (${delP.length})</h3><table><thead><tr><th>Nombre</th><th>Partidos</th></tr></thead><tbody>${delRows}</tbody></table></div>
+   </div>
+   <div class="card"><h3>Canchas / sedes usadas (${ven.length})</h3><table><thead><tr><th>ID</th><th>Sede</th><th>Part.</th></tr></thead><tbody>${venRows}</tbody></table></div>
+   <div class="card"><h3>Partidos jugados (${parts.length})</h3><table><thead><tr><th>#</th><th>Fecha</th><th>Hora</th><th>Cancha</th><th>Zona</th><th>Partido</th><th>Pareja</th></tr></thead><tbody>${partRows}</tbody></table></div>`;
 }
 function openPerson(pid){const per=personById(pid);lastKind=per.roles.includes('Árbitro')?'arb':per.roles.includes('Observador')?'obs':'del';render('per',pid);}
 
@@ -239,14 +260,35 @@ function viewParConsol(i){
 }
 function viewParEvento(arg){
   const [evid,code]=arg.split('|');const c=parejaBy(evid,code);
+  const members=[...new Set(c.pids||[])].map(personById).filter(Boolean);
+  const fisRows=members.map(p=>{const f=(p.fisico_ev||{})[evid]||{};return `<tr class="clk" onclick="openPerson('${p.pid}')"><td><b>${p.nombre}</b></td><td>${f.shuttle!=null?f.shuttle:'—'}</td><td>${f.cat_es!=null?Math.round(f.cat_es*100)+'%':'—'}</td><td>${f.cat_en!=null?Math.round(f.cat_en*100)+'%':'—'}</td></tr>`;}).join('');
   const mrows=(c.partidos||[]).map(m=>`<tr><td>${m.id||''}</td><td>${m.fecha}</td><td>${m.hora}</td><td>${m.local} vs ${m.visitante}</td><td>${m.resultado||'—'}</td><td>${m.observador||'—'}</td><td>${m.evaluado?'<span class="pill p-ok">Sí</span>':'<span class="pill p-warn">No</span>'}</td><td>${m.evaluado?'<b>'+m.puntos+'</b>':'—'}</td></tr>`).join('');
-  return `<button class="back" onclick="history.length>1?history.back():render('par')">← Volver</button>`+dhead(`Pareja ${c.code}`,`${c.names.join(' / ')} · ${c.evname} · Puesto #${c.ranking||'-'}`)+
+  return `<button class="back" onclick="render('evd','${evid}')">← Volver al evento</button>`+dhead(`Pareja ${c.code}`,`${c.names.join(' / ')} · ${c.evname} · Puesto #${c.ranking||'-'}`)+
    `<div class="grid k3">${kpi(c.n_desig,'Dirigidos')}${kpi(c.n_eval,'Evaluados')}${kpi(c.pts||'—','Promedio')}</div>
-   <div class="two"><div class="card"><h3>Resumen</h3>${kv({'Evento':c.evname,'Puesto (torneo)':'#'+(c.ranking||'-'),'Dirigidos':c.n_desig,'Evaluados':c.n_eval})}</div>
-   <div class="card"><h3>Notas por rubro (este evento)</h3>${rubrics(c.fields)}</div></div>
+   <div class="two"><div class="card"><h3>Notas por rubro (este evento)</h3>${rubrics(c.fields)}</div>
+   <div class="card"><h3>Físico y teórico (este evento)</h3><table><thead><tr><th>Árbitro</th><th>Shuttle</th><th>Cat. Esp.</th><th>Cat. Ing.</th></tr></thead><tbody>${fisRows}</tbody></table></div></div>
    <div class="card"><h3>Partidos dirigidos (${c.n_desig})</h3><table><thead><tr><th>ID</th><th>Fecha</th><th>Hora</th><th>Partido</th><th>Resultado</th><th>Observador</th><th>Evaluado</th><th>Nota</th></tr></thead><tbody>${mrows}</tbody></table></div>`;
 }
-
+function backEv(evid){return `<button class="back" onclick="render('evd','${evid}')">← Volver al evento</button>`;}
+function viewEvObs(arg){
+  const [evid,pid]=arg.split('|');const p=personById(pid);const e=DATA.events.find(x=>x.id===evid);
+  const obs=[];
+  DATA.parejas.filter(pj=>pj.evid===evid).forEach(pj=>(pj.partidos||[]).forEach(m=>{if(m.evaluado&&m.observador&&tokMatch(m.observador,p.nombre))obs.push({code:pj.code,names:pj.names.join(' / '),partido:m.local+' vs '+m.visitante,resultado:m.resultado,dificultad:m.dificultad,puntos:m.puntos});}));
+  return backEv(evid)+dhead(p.nombre,`Observador · ${e.nombre}`)+
+   `<div class="card"><h3>Observaciones en este evento (${obs.length})</h3><table><thead><tr><th>Pareja</th><th>Partido</th><th>Resultado</th><th>Dific.</th><th>Nota</th></tr></thead><tbody>${obs.map(o=>`<tr><td>${o.code} · ${o.names}</td><td>${o.partido}</td><td>${o.resultado}</td><td>${o.dificultad}</td><td><b>${o.puntos}</b></td></tr>`).join('')}</tbody></table></div>`;
+}
+function viewEvDel(arg){
+  const [evid,pid]=arg.split('|');const p=personById(pid);const e=DATA.events.find(x=>x.id===evid);
+  const dl=DATA.partidos.filter(m=>m.evid===evid&&m.delegado&&tokMatch(m.delegado,p.nombre));
+  return backEv(evid)+dhead(p.nombre,`Delegado · ${e.nombre}`)+
+   `<div class="card"><h3>Partidos como delegado en este evento (${dl.length})</h3><table><thead><tr><th>#</th><th>Fecha</th><th>Hora</th><th>Cancha</th><th>Partido</th><th>Pareja</th></tr></thead><tbody>${dl.map(m=>`<tr><td>${m.id}</td><td>${m.fecha}</td><td>${m.hora}</td><td>${m.cancha}</td><td>${m.local} vs ${m.visitante}</td><td>${m.pareja_code||''}</td></tr>`).join('')}</tbody></table></div>`;
+}
+function viewEvSede(arg){
+  const [evid,vid]=arg.split('|');const v=DATA.venues.find(x=>x.id===vid);const e=DATA.events.find(x=>x.id===evid);
+  const parts=DATA.partidos.filter(m=>m.evid===evid&&v.canchas.some(c=>c.evid===evid&&c.nombre===m.cancha));
+  return backEv(evid)+dhead(v.id,`${v.sede} · ${e.nombre}`)+
+   `<div class="card"><h3>Partidos jugados en esta sede (${parts.length})</h3><table><thead><tr><th>#</th><th>Fecha</th><th>Hora</th><th>Partido</th><th>Pareja</th><th>Delegado</th><th>Observador</th></tr></thead><tbody>${parts.map(m=>`<tr><td>${m.id}</td><td>${m.fecha}</td><td>${m.hora}</td><td>${m.local} vs ${m.visitante}</td><td>${m.pareja_code||''}</td><td>${m.delegado}</td><td>${m.observador}</td></tr>`).join('')}</tbody></table></div>`;
+}
 function viewVenue(id){
   const v=DATA.venues.find(x=>x.id===id);
   const parts=DATA.partidos.filter(p=>v.canchas.some(c=>c.evid===p.evid&&c.nombre===p.cancha));
